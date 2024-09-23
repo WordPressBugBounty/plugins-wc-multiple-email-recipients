@@ -1,0 +1,1 @@
+# plugins-wc-multiple-email-recipients
