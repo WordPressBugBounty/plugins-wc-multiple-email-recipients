@@ -1,271 +1,164 @@
 <?php
 
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
+
+/**
+ * Checkbox option keys and labels, grouped by section.
+ * Keys are kept exactly as stored by previous versions.
+ */
+function wcme_checkbox_sections() {
+	return array(
+		__( 'WooCommerce Core', 'wc-multiple-email-recipients' ) => array(
+			'enable_new'           => __( 'WooCommerce New Order Mail', 'wc-multiple-email-recipients' ),
+			'enable_cancelled'     => __( 'WooCommerce Cancelled Order Mail', 'wc-multiple-email-recipients' ),
+			'enable_processing'    => __( 'WooCommerce Processing Order Mail', 'wc-multiple-email-recipients' ),
+			'enable_completed'     => __( 'WooCommerce Completed Order Mail', 'wc-multiple-email-recipients' ),
+			'enable_invoice'       => __( 'WooCommerce Order Invoice Mail', 'wc-multiple-email-recipients' ),
+			'enable_on_hold'       => __( 'WooCommerce On Hold Mail <i>(This email only gets triggered when the order gets set from pending or failed to on-hold)</i>', 'wc-multiple-email-recipients' ),
+			'enable_refunded'      => __( 'WooCommerce Refunded Order Mail (full and partial refunds)', 'wc-multiple-email-recipients' ),
+			'enable_customer_note' => __( 'WooCommerce Customer Note <i>(This email only gets triggered for public notes / Notes to the customer.)</i>', 'wc-multiple-email-recipients' ),
+		),
+		__( 'WooCommerce Bookings', 'wc-multiple-email-recipients' ) => array(
+			'enable_booking_cancelled'    => __( 'WooCommerce Bookings Cancelled Mail', 'wc-multiple-email-recipients' ),
+			'enable_booking_confirmed'    => __( 'WooCommerce Bookings Confirmed Mail', 'wc-multiple-email-recipients' ),
+			'enable_booking_notification' => __( 'WooCommerce Bookings Manual Notification Mail', 'wc-multiple-email-recipients' ),
+			'enable_booking_reminder'     => __( 'WooCommerce Bookings Reminder Mail', 'wc-multiple-email-recipients' ),
+			'enable_new_booking'          => __( 'WooCommerce Bookings New Booking Mail', 'wc-multiple-email-recipients' ),
+		),
+		__( 'WooCommerce Subscriptions', 'wc-multiple-email-recipients' ) => array(
+			'enable_customer_completed_renewal_order' => __( 'WooCommerce Subscriptions Completed Renewal Order Mail', 'wc-multiple-email-recipients' ),
+			'enable_customer_completed_switch_order'  => __( 'WooCommerce Subscriptions Completed Switch Order Mail', 'wc-multiple-email-recipients' ),
+			'enable_customer_payment_retry'           => __( 'WooCommerce Subscriptions Customer Payment Retry Mail', 'wc-multiple-email-recipients' ),
+			'customer_processing_renewal_order'       => __( 'WooCommerce Subscriptions Customer Processing Renewal Order Mail', 'wc-multiple-email-recipients' ),
+			'enable_customer_renewal_invoice'         => __( 'WooCommerce Subscriptions Customer Renewal Invoice Mail', 'wc-multiple-email-recipients' ),
+			'expired_subscription'                    => __( 'WooCommerce Subscriptions Expired Subscription Mail', 'wc-multiple-email-recipients' ),
+			'enable_new_renewal_order'                => __( 'WooCommerce Subscriptions New Renewal Order Mail', 'wc-multiple-email-recipients' ),
+			'enable_new_switch_order'                 => __( 'WooCommerce Subscriptions New Switch Order Mail', 'wc-multiple-email-recipients' ),
+			'enable_suspended_subscription'           => __( 'WooCommerce Subscriptions Suspended Subscription Mail', 'wc-multiple-email-recipients' ),
+			'enable_payment_retry'                    => __( 'WooCommerce Subscriptions Payment Retry Mail', 'wc-multiple-email-recipients' ),
+		),
+	);
+}
+
 function wcme_options_page() {
 
-	global $wcme_options;
+	$options = get_option( 'wcme_settings' );
+	if ( ! is_array( $options ) ) {
+		$options = array();
+	}
 
-	// Set default values for the options
-    $default_options = array(
-        'email_1' => '',
-        'email_2' => '',
-        'email_3' => '',
-        'email_4' => '',
-        'email_5' => '',
-        'enable_new' => 0,
-        'enable_cancelled' => 0,
-        'enable_processing' => 0,
-        'enable_completed' => 0,
-        'enable_invoice' => 0,
-        'enable_on_hold' => 0,
-        'enable_refunded' => 0,
-        'enable_customer_note' => 0,
-        'enable_booking_cancelled' => 0,
-        'enable_booking_confirmed' => 0,
-        'enable_booking_notification' => 0,
-        'enable_booking_reminder' => 0,
-        'enable_new_booking' => 0,
-        'enable_customer_completed_renewal_order' => 0,
-        'enable_customer_completed_switch_order' => 0,
-        'enable_customer_payment_retry' => 0,
-        'customer_processing_renewal_order' => 0,
-        'enable_customer_renewal_invoice' => 0,
-        'expired_subscription' => 0,
-        'enable_new_renewal_order' => 0,
-        'enable_new_switch_order' => 0,
-        'enable_suspended_subscription' => 0,
-        'enable_payment_retry' => 0,
-    );
-
-    // Ensure $wcme_options is an array and merge it with the default values
-    $wcme_options = wp_parse_args($wcme_options, $default_options);
-
-	ob_start(); ?>
+	// Prefill the textarea: new 'emails' list, or the legacy email_1..email_5 fields.
+	if ( isset( $options['emails'] ) ) {
+		$emails_value = $options['emails'];
+	} else {
+		$legacy = array();
+		for ( $i = 1; $i <= 5; $i++ ) {
+			if ( ! empty( $options[ 'email_' . $i ] ) ) {
+				$legacy[] = $options[ 'email_' . $i ];
+			}
+		}
+		$emails_value = implode( "\n", $legacy );
+	}
+	?>
 	<div class="wrap">
-		<h2>WC Multiple Recipients for E-Mail</h2>
+		<h2><?php _e( 'WC Multiple Recipients for E-Mail', 'wc-multiple-email-recipients' ); ?></h2>
 
 		<form method="post" action="options.php">
 
-			<?php settings_fields('wcme_settings_group'); ?>
+			<?php settings_fields( 'wcme_settings_group' ); ?>
 
-
-			<h4><?php _e('Enter your additional E-Mail recipients. <br><p>Enter one E-Mail per field i.e. woo@sendtome.com</p>', 'wcme_domain'); ?></h4>
+			<h4><?php printf( __( 'Enter your additional E-Mail recipients, one per line (up to %d).', 'wc-multiple-email-recipients' ), WCME_MAX_EMAILS ); ?></h4>
 			<p>
-				<input size="70" id="wcme_settings[email_1]" name="wcme_settings[email_1]" type="text" value="<?php echo $wcme_options['email_1']; ?>"/><br>
-				<label class="description" for="wcme_settings[email_1]"><?php _e('', 'wcme_domain'); ?></label>
+				<textarea id="wcme_settings_emails" name="wcme_settings[emails]" rows="8" cols="70" placeholder="woo@sendtome.com"><?php echo esc_textarea( $emails_value ); ?></textarea>
 			</p>
 
-			<p>
-				<input size="70" id="wcme_settings[email_2]" name="wcme_settings[email_2]" type="text" value="<?php echo $wcme_options['email_2']; ?>"/><br>
-				<label class="description" for="wcme_settings[email_1]"><?php _e('', 'wcme_domain'); ?></label>
-			</p>
+			<h4><?php _e( 'Select the WooCommerce Mails you want to have multiple recipients', 'wc-multiple-email-recipients' ); ?></h4>
 
-			<p>
-				<input size="70" id="wcme_settings[email_3]" name="wcme_settings[email_3]" type="text" value="<?php echo $wcme_options['email_3']; ?>"/><br>
-				<label class="description" for="wcme_settings[email_1]"><?php _e('', 'wcme_domain'); ?></label>
-			</p>
-
-			<p>
-				<input size="70" id="wcme_settings[email_4]" name="wcme_settings[email_4]" type="text" value="<?php echo $wcme_options['email_4']; ?>"/><br>
-				<label class="description" for="wcme_settings[email_1]"><?php _e('', 'wcme_domain'); ?></label>
-			</p>
-
-			<p>
-				<input size="70" id="wcme_settings[email_5]" name="wcme_settings[email_5]" type="text" value="<?php echo $wcme_options['email_5']; ?>"/><br>
-				<label class="description" for="wcme_settings[email_1]"><?php _e('', 'wcme_domain'); ?></label>
-			</p>
-
-
-			<h4><?php _e('Select the WooCommerce Mails you want to have multiple recipients', 'wcme_domain'); ?></h4>
-			<h5><?php _e('WooCommerce Core', 'wcme_domain'); ?></h5>
-			<p>
-				<input name="wcme_settings[enable_new]" value="0" type="hidden">
-				<input type="checkbox" name="wcme_settings[enable_new]" value="1"<?php checked( 1 == $wcme_options['enable_new'] ); ?> />
-				<label class="description" for="wcme_settings[enable_new]"><?php _e('WooCommerce New Order Mail', 'wcme_domain'); ?></label>
-			</p>
-
-			<p>
-				<input name="wcme_settings[enable_cancelled]" value="0" type="hidden">
-				<input type="checkbox" name="wcme_settings[enable_cancelled]" value="1"<?php checked( 1 == $wcme_options['enable_cancelled'] ); ?> />
-				<label class="description" for="wcme_settings[enable_cancelled]"><?php _e('WooCommerce Cancelled Order Mail', 'wcme_domain'); ?></label>
-			</p>
-
-			<p>
-				<input name="wcme_settings[enable_processing]" value="0" type="hidden">
-				<input type="checkbox" name="wcme_settings[enable_processing]" value="1"<?php checked( 1 == $wcme_options['enable_processing'] ); ?> />
-				<label class="description" for="wcme_settings[enable_processing]"><?php _e('WooCommerce Processing Order Mail', 'wcme_domain'); ?></label>
-			</p>
-
-
-			<p>
-				<input name="wcme_settings[enable_completed]" value="0" type="hidden">
-				<input type="checkbox" name="wcme_settings[enable_completed]" value="1"<?php checked( 1 == $wcme_options['enable_completed'] ); ?> />
-				<label class="description" for="wcme_settings[enable_completed]"><?php _e('WooCommerce Completed Order Mail', 'wcme_domain'); ?></label>
-			</p>
-
-
-			<p>
-
-				<input name="wcme_settings[enable_invoice]" value="0" type="hidden">
-				<input type="checkbox" name="wcme_settings[enable_invoice]" value="1"<?php checked( 1 == $wcme_options['enable_invoice'] ); ?> />
-				<label class="description" for="wcme_settings[enable_invoice]"><?php _e('WooCommerce Order Invoice Mail', 'wcme_domain'); ?></label>
-			</p>
-
-			<input name="wcme_settings[enable_on_hold]" value="0" type="hidden">
-				<input type="checkbox" name="wcme_settings[enable_on_hold]" value="1"<?php checked( 1 == $wcme_options['enable_on_hold'] ); ?> />
-				<label class="description" for="wcme_settings[enable_on_hold]"><?php _e('WooCommerce On Hold Mail <i>(This email only gets triggered when the order gets set from pending or failed to on-hold)</i>', 'wcme_domain'); ?></label>
-			</p>
-
-
-
-			<p>
-
-				<input name="wcme_settings[enable_refunded]" value="0" type="hidden">
-				<input type="checkbox" name="wcme_settings[enable_refunded]" value="1"<?php checked( 1 == $wcme_options['enable_refunded'] ); ?> />
-				<label class="description" for="wcme_settings[enable_refunded]"><?php _e('WooCommerce Refunded Order Mail', 'wcme_domain'); ?></label>
-			</p>
-
-			<p>
-				<input name="wcme_settings[enable_customer_note]" value="0" type="hidden">
-				<input type="checkbox" name="wcme_settings[enable_customer_note]" value="1"<?php checked( 1 == $wcme_options['enable_customer_note'] ); ?> />
-				<label class="description" for="wcme_settings[enable_customer_note]"><?php _e('WooCommerce Customer Note<i>(This email only gets triggered for public notes / Notes to the customer.)</i>', 'wcme_domain'); ?></label>
-			</p>
-
-			<!-- Start WooCommerce Bookings Mails -->
-			<h5><?php _e('WooCommerce Bookings', 'wcme_domain'); ?></h5>
-			<p>
-
-				<input name="wcme_settings[enable_booking_cancelled]" value="0" type="hidden">
-				<input type="checkbox" name="wcme_settings[enable_booking_cancelled]" value="1"<?php checked( 1 ==  ($wcme_options['enable_booking_cancelled']) ); ?> />
-				<label class="description" for="wcme_settings[enable_booking_cancelled]"><?php _e('WooCommerce Bookings Cancelled Mail', 'wcme_domain'); ?></label>
-			</p>
-
-			<p>
-
-				<input name="wcme_settings[enable_booking_confirmed]" value="0" type="hidden">
-				<input type="checkbox" name="wcme_settings[enable_booking_confirmed]" value="1"<?php checked(  1 == ( $wcme_options['enable_booking_confirmed'] ) );
-					//checked( 1 == $wcme_options['enable_booking_confirmed'] ); ?> />
-				<label class="description" for="wcme_settings[enable_booking_confirmed]"><?php _e('WooCommerce Bookings Confirmed Mail', 'wcme_domain'); ?></label>
-			</p>
-
-
-			<p>
-
-				<input name="wcme_settings[enable_booking_notification]" value="0" type="hidden">
-				<input type="checkbox" name="wcme_settings[enable_booking_notification]" value="1"<?php checked(  1 == ( $wcme_options['enable_booking_notification'] )); ?> />
-				<label class="description" for="wcme_settings[enable_booking_notification]"><?php _e('WooCommerce Bookings Manual Notification Mail', 'wcme_domain'); ?></label>
-			</p>
-
-
-			<p>
-
-				<input name="wcme_settings[enable_booking_reminder]" value="0" type="hidden">
-				<input type="checkbox" name="wcme_settings[enable_booking_reminder]" value="1"<?php checked(  1 == ( $wcme_options['enable_booking_reminder'] )); ?> />
-				<label class="description" for="wcme_settings[enable_booking_reminder]"><?php _e('WooCommerce Bookings Reminder Mail', 'wcme_domain'); ?></label>
-			</p>
-
-
-			<p>
-
-				<input name="wcme_settings[enable_new_booking]" value="0" type="hidden">
-				<input type="checkbox" name="wcme_settings[enable_new_booking]" value="1"<?php checked(  1 ==  ( $wcme_options['enable_new_booking'] )); ?> />
-				<label class="description" for="wcme_settings[enable_new_booking]"><?php _e('WooCommerce Bookings New Booking Mail', 'wcme_domain'); ?></label>
-			</p>
-			<!-- Start WooCommerce Subscriptions -->
-			<h5><?php _e('WooCommerce Subscriptions', 'wcme_domain'); ?></h5>
-			<p>
-
-				<input name="wcme_settings[enable_customer_completed_renewal_order]" value="0" type="hidden">
-				<input type="checkbox" name="wcme_settings[enable_customer_completed_renewal_order]" value="1"<?php checked(  1 ==  ( $wcme_options['enable_customer_completed_renewal_order'] )); ?> />
-				<label class="description" for="wcme_settings[enable_customer_completed_renewal_order]"><?php _e('WooCommerce Subscriptions Completed Renewal Order Mail', 'wcme_domain'); ?></label>
-			</p>
-
-			<p>
-
-				<input name="wcme_settings[enable_customer_completed_switch_order]" value="0" type="hidden">
-				<input type="checkbox" name="wcme_settings[enable_customer_completed_switch_order]" value="1"<?php checked(  1 ==  ( $wcme_options['enable_customer_completed_switch_order'] )); ?> />
-				<label class="description" for="wcme_settings[enable_customer_completed_switch_order]"><?php _e('WooCommerce Subscriptions Completed Switch Order Mail', 'wcme_domain'); ?></label>
-			</p>
-
-			<p>
-
-				<input name="wcme_settings[enable_customer_payment_retry]" value="0" type="hidden">
-				<input type="checkbox" name="wcme_settings[enable_customer_payment_retry]" value="1"<?php checked(  1 ==  ( $wcme_options['enable_customer_payment_retry'] )); ?> />
-				<label class="description" for="wcme_settings[enable_customer_payment_retry]"><?php _e('WooCommerce Subscriptions Customer Payment Retry Mail', 'wcme_domain'); ?></label>
-			</p>
-
-			<p>
-
-				<input name="wcme_settings[customer_processing_renewal_order]" value="0" type="hidden">
-				<input type="checkbox" name="wcme_settings[customer_processing_renewal_order]" value="1"<?php checked(  1 ==  ( $wcme_options['customer_processing_renewal_order'] )); ?> />
-				<label class="description" for="wcme_settings[customer_processing_renewal_order]"><?php _e('WooCommerce Subscriptions Customer Processing Renewal Order Mail', 'wcme_domain'); ?></label>
-			</p>
-
-			<p>
-
-				<input name="wcme_settings[enable_customer_renewal_invoice]" value="0" type="hidden">
-				<input type="checkbox" name="wcme_settings[enable_customer_renewal_invoice]" value="1"<?php checked(  1 ==  ( $wcme_options['enable_customer_renewal_invoice'] )); ?> />
-				<label class="description" for="wcme_settings[enable_customer_renewal_invoice]"><?php _e('WooCommerce Subscriptions Customer Renewal Invoice Mail', 'wcme_domain'); ?></label>
-			</p>
-
-
-			<p>
-
-				<input name="wcme_settings[expired_subscription]" value="0" type="hidden">
-				<input type="checkbox" name="wcme_settings[expired_subscription]" value="1"<?php checked(  1 ==  ( $wcme_options['expired_subscription'] )); ?> />
-				<label class="description" for="wcme_settings[expired_subscription]"><?php _e('WooCommerce Subscriptions Expired Subscription Mail', 'wcme_domain'); ?></label>
-			</p>
-
-			<p>
-
-				<input name="wcme_settings[enable_new_renewal_order]" value="0" type="hidden">
-				<input type="checkbox" name="wcme_settings[enable_new_renewal_order]" value="1"<?php checked(  1 ==  ( $wcme_options['enable_new_renewal_order'] )); ?> />
-				<label class="description" for="wcme_settings[enable_new_renewal_order]"><?php _e('WooCommerce Subscriptions New Renewal Order Mail', 'wcme_domain'); ?></label>
-			</p>
-
-			<p>
-
-				<input name="wcme_settings[enable_new_switch_order]" value="0" type="hidden">
-				<input type="checkbox" name="wcme_settings[enable_new_switch_order]" value="1"<?php checked(  1 ==  ( $wcme_options['enable_new_switch_order'] )); ?> />
-				<label class="description" for="wcme_settings[enable_new_switch_order]"><?php _e('WooCommerce Subscriptions New Switch Order Mail', 'wcme_domain'); ?></label>
-			</p>
-
-			<p>
-
-				<input name="wcme_settings[enable_suspended_subscription]" value="0" type="hidden">
-				<input type="checkbox" name="wcme_settings[enable_suspended_subscription]" value="1"<?php checked(  1 ==  ( $wcme_options['enable_suspended_subscription'] )); ?> />
-				<label class="description" for="wcme_settings[enable_suspended_subscription]"><?php _e('WooCommerce Subscriptions Suspended Subscription Mail', 'wcme_domain'); ?></label>
-			</p>
-
-			<p>
-
-				<input name="wcme_settings[enable_payment_retry]" value="0" type="hidden">
-				<input type="checkbox" name="wcme_settings[enable_payment_retry]" value="1"<?php checked(  1 ==  ( $wcme_options['enable_payment_retry'] )); ?> />
-				<label class="description" for="wcme_settings[enable_payment_retry]"><?php _e('WooCommerce Subscriptions Payment Retry Mail', 'wcme_domain'); ?></label>
-			</p>
+			<?php foreach ( wcme_checkbox_sections() as $section_title => $checkboxes ) : ?>
+				<h5><?php echo esc_html( $section_title ); ?></h5>
+				<?php foreach ( $checkboxes as $key => $label ) : ?>
+					<p>
+						<input name="wcme_settings[<?php echo esc_attr( $key ); ?>]" value="0" type="hidden">
+						<input type="checkbox" id="wcme_settings_<?php echo esc_attr( $key ); ?>" name="wcme_settings[<?php echo esc_attr( $key ); ?>]" value="1"<?php checked( ! empty( $options[ $key ] ) ); ?> />
+						<label class="description" for="wcme_settings_<?php echo esc_attr( $key ); ?>"><?php echo wp_kses( $label, array( 'i' => array() ) ); ?></label>
+					</p>
+				<?php endforeach; ?>
+			<?php endforeach; ?>
 
 			<p class="submit">
-				<input type="submit" class="button-primary" value="<?php _e('Save Options', 'wcme_domain'); ?>" />
-
+				<input type="submit" class="button-primary" value="<?php esc_attr_e( 'Save Options', 'wc-multiple-email-recipients' ); ?>" />
 			</p>
 
 		</form>
 
 	</div>
 	<?php
-	echo ob_get_clean();
 }
 
+/**
+ * Sanitize settings on save. Invalid email addresses are dropped and reported,
+ * never silently discarded.
+ */
+function wcme_sanitize_settings( $input ) {
+	$output = array();
 
+	if ( ! is_array( $input ) ) {
+		return $output;
+	}
 
+	$valid    = array();
+	$rejected = array();
 
+	foreach ( preg_split( '/[\r\n,]+/', (string) ( $input['emails'] ?? '' ) ) as $email ) {
+		$email = trim( $email );
+		if ( '' === $email ) {
+			continue;
+		}
+		if ( is_email( $email ) ) {
+			$valid[] = $email;
+		} else {
+			$rejected[] = $email;
+		}
+	}
+
+	$valid = array_values( array_unique( $valid ) );
+
+	if ( count( $valid ) > WCME_MAX_EMAILS ) {
+		$rejected = array_merge( $rejected, array_slice( $valid, WCME_MAX_EMAILS ) );
+		$valid    = array_slice( $valid, 0, WCME_MAX_EMAILS );
+	}
+
+	$output['emails'] = implode( "\n", $valid );
+
+	if ( ! empty( $rejected ) ) {
+		add_settings_error(
+			'wcme_settings',
+			'wcme_invalid_emails',
+			sprintf(
+				__( 'The following entries were not saved (invalid email address or above the limit of %1$d): %2$s', 'wc-multiple-email-recipients' ),
+				WCME_MAX_EMAILS,
+				esc_html( implode( ', ', $rejected ) )
+			)
+		);
+	}
+
+	foreach ( wcme_checkbox_sections() as $checkboxes ) {
+		foreach ( $checkboxes as $key => $label ) {
+			$output[ $key ] = empty( $input[ $key ] ) ? 0 : 1;
+		}
+	}
+
+	return $output;
+}
 
 function wcme_add_options_link() {
-	add_options_page('WC Multiple Recipients for Email', 'WC Multiple Email Recipients', 'manage_options', 'wcme-options', 'wcme_options_page');
+	add_options_page( 'WC Multiple Recipients for Email', 'WC Multiple Email Recipients', 'manage_options', 'wcme-options', 'wcme_options_page' );
 }
-add_action('admin_menu', 'wcme_add_options_link');
+add_action( 'admin_menu', 'wcme_add_options_link' );
 
 function wcme_register_settings() {
-	// creates our settings in the options table
-	register_setting('wcme_settings_group', 'wcme_settings');
+	register_setting( 'wcme_settings_group', 'wcme_settings', array( 'sanitize_callback' => 'wcme_sanitize_settings' ) );
 }
-add_action('admin_init', 'wcme_register_settings');
+add_action( 'admin_init', 'wcme_register_settings' );

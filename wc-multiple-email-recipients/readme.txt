@@ -2,19 +2,20 @@
 Contributors: conschneider,dinodesigns87
 Donate link: http://conschneider.de
 Tags: WooCommerce,emails,notification,bcc,cc
-Requires at least: 4.0
-Tested up to: 6.5
-Stable tag: 1.4.1
+Requires at least: 5.0
+Tested up to: 7.0
+Requires PHP: 7.4
+Stable tag: 1.5.0
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
-This plugin lets you add up to five additional email addresses to be used with WooCommerce notification mails.
+This plugin lets you add up to 25 additional email addresses to be used with WooCommerce notification mails.
 
 == Description ==
 
-WooCommerce notification emails only get sent to the customer and admin email. Sometimes you need more than that. This plugin allows you to set up to five additional email addresses that can be used as additional email recipients for WooCommerce notification emails. You can select which email you want to have multiple recipients via the settings.
+WooCommerce notification emails only get sent to the customer and admin email. Sometimes you need more than that. This plugin allows you to set up to 25 additional email addresses that can be used as additional email recipients for WooCommerce notification emails. You can select which email you want to have multiple recipients via the settings.
 
-This plugin support WooCommerce, WooCommerce Bookings and WooCommerce Subscriptions.
+This plugin support WooCommerce, WooCommerce Bookings and WooCommerce Subscriptions. It is compatible with WooCommerce High-Performance Order Storage (HPOS).
 
 The duplicated mails sent by this plugin will not show up in an email logger as a stand alone entry as they are sent using "BCC". The BCC emails will however be visible in the email header.
 
@@ -67,11 +68,25 @@ The following WooCommerce notification emails are supported:
 
 The duplicated mails sent by this plugin are sent using "BCC". Thus they will not show up in an email logger.
 
+= I updated from an older version. Do I need to re-save my settings? =
+
+No. Your existing email addresses and selections keep working as they are. The next time you save the settings page they are stored in the new format automatically.
+
 == Screenshots ==
 
-1. Settings page
+1. Settings page: recipient list and WooCommerce core emails
+2. Settings page: WooCommerce Bookings and Subscriptions emails
 
 == Changelog ==
+
+= 1.5.0 =
+* New: Up to 25 additional recipients, entered as a simple list (one email per line). Existing addresses from older versions are picked up automatically - no re-save needed.
+* Fix: Empty email fields no longer produce malformed Bcc headers.
+* Fix: PHP warnings when sending emails with settings that were never saved.
+* New: Invalid email addresses are rejected on save with a notice naming them.
+* New: Declared compatibility with WooCommerce High-Performance Order Storage (HPOS).
+* Dev: Settings are now sanitized and escaped, text domain aligned with the plugin slug.
+* Test: Compatibility tested with WordPress 7.0 and WooCommerce 10.9.
 
 = 1.4.1 =
 * Fix: Add default options values to prevent PHP Warning.
@@ -114,4 +129,3 @@ The duplicated mails sent by this plugin are sent using "BCC". Thus they will no
 
 = 1.0 =
 * Initial version.
-
